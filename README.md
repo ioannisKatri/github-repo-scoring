@@ -10,6 +10,7 @@ This project implements a backend application for scoring repositories on GitHub
 - [Running the Project](#running-the-project)
 - [API Documentation](#api-documentation)
 - [Testing](#testing)
+- [Knowledge Base](#knowledge-base)
 
 ## Prerequisites
 
@@ -35,6 +36,8 @@ This project implements a backend application for scoring repositories on GitHub
     - Copy `.env.example` to `.env`
     - Update the values in `.env` as needed
 
+
+
 ## Running the Project
 
 **Start the Node.js application**:
@@ -51,4 +54,14 @@ Swagger documentation is available at [http://localhost:3000/api-docs](http://lo
 ### Running Tests
 ```sh
 npm run test
+```
+
+## Knowledge base
+
+### Score calculation
+To calcualte the repository score we use weights for stars, forks, and recency which are configurable through the .env file. You can set the weights according to your preferences.
+```
+STARS_WEIGHT=0.5
+FORKS_WEIGHT=0.3
+RECENCY_WEIGHT=0.2
 ```
