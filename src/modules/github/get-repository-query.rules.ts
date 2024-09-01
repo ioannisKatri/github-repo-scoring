@@ -10,7 +10,7 @@ import {
 export class GetRepositoryQueryRules {
   @ApiProperty({
     description:
-      'Programming language of the repositories (e.g., java or java+javascript)',
+      'language must be a single language or multiple languages connected by a plus sign (e.g., java or java+javascript)',
     example: 'java',
   })
   @IsString()

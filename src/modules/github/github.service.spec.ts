@@ -49,7 +49,7 @@ describe('GithubService', () => {
       const params: GetScoredRepositoriesParams = {
         language: 'javascript',
         date: '2022-01-01',
-        perPage: 30,
+        perPage: 1,
         page: 1,
         order: 'desc',
       };
@@ -62,7 +62,7 @@ describe('GithubService', () => {
             updated_at: '2022-01-01T00:00:00Z',
           },
         ],
-        total_count: 100,
+        total_count: 5,
       };
 
       mockedAxios.get.mockResolvedValue({
@@ -81,9 +81,62 @@ describe('GithubService', () => {
       expect(result).toEqual({
         items: [{ name: 'repo1', score: 150 }],
         count: 1,
-        totalCount: 100,
+        totalCount: 5,
         page: 1,
-        totalPages: 4,
+        totalPages: 5,
+      });
+    });
+
+    it('should return multilanguage scored repositories with pagination', async () => {
+      const params: GetScoredRepositoriesParams = {
+        language: 'javascript+java',
+        date: '2022-01-01',
+        perPage: 2,
+        page: 1,
+        order: 'desc',
+      };
+
+      const fetchResponse = {
+        items: [
+          {
+            full_name: 'repo1',
+            stargazers_count: 100,
+            forks_count: 50,
+            updated_at: '2022-01-01T00:00:00Z',
+          },
+          {
+            full_name: 'repo2Javascript',
+            stargazers_count: 120,
+            forks_count: 9,
+            updated_at: '2022-01-05T00:00:00Z',
+          },
+        ],
+        total_count: 6,
+      };
+
+      mockedAxios.get.mockResolvedValue({
+        data: fetchResponse,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+
+      jest
+        .spyOn(scoringService, 'calculateScore')
+        .mockImplementationOnce(() => 150)
+        .mockImplementationOnce(() => 140);
+
+      const result = await service.getScoredRepositories(params);
+      expect(result).toEqual({
+        items: [
+          { name: 'repo1', score: 150 },
+          { name: 'repo2Javascript', score: 140 },
+        ],
+        count: 2,
+        totalCount: 6,
+        page: 1,
+        totalPages: 3,
       });
     });
 
@@ -95,7 +148,9 @@ describe('GithubService', () => {
         page: 1,
         order: 'desc',
       };
-      mockedAxios.get.mockRejectedValue(new Error('GitHub API error'));
+      mockedAxios.get.mockRejectedValue(
+        new InternalServerErrorException('GitHub API error'),
+      );
 
       await expect(service.getScoredRepositories(params)).rejects.toThrow(
         InternalServerErrorException,

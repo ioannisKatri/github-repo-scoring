@@ -19,7 +19,6 @@ import { ScoringService } from '../scoring/scoring.service';
 export class GithubService {
   private readonly baseUrl: string;
   private readonly token: string;
-  private readonly logger = new Logger(GithubService.name);
 
   constructor(
     private configService: ConfigService,
@@ -37,13 +36,15 @@ export class GithubService {
 
   private buildQueryString(params: FetchRepositoriesParams): string {
     const { language, date, perPage, page, order } = params;
-    const query = `language:${language} created:>=${date}`;
+    const languages = language.split('+').join(' language:');
+    const query = `language:${languages} created:>=${date}`;
     const queryString = new URLSearchParams({
       q: query,
       per_page: perPage.toString(),
       page: page.toString(),
       order: order,
     });
+
     return queryString.toString();
   }
 
@@ -64,29 +65,22 @@ export class GithubService {
     const url = this.buildUrl(params);
     const headers = this.getRequestHeaders();
 
-    try {
-      const response = await axios.get(url, { headers });
-      if (response.status !== 200) {
-        throw new Error(
-          `GitHub API error: ${response.statusText}, ${response.data}`,
-        );
-      }
-
-      const total_count = response.data.total_count;
-      const items = response.data.items.map((item) => ({
-        name: item.full_name,
-        stargazers_count: item.stargazers_count,
-        forks_count: item.forks_count,
-        updated_at: item.updated_at,
-      }));
-
-      return { items, total_count };
-    } catch (error) {
-      this.logger.error(`GitHub API error: ${error.message}`);
+    const response = await axios.get(url, { headers });
+    if (response.status !== 200) {
       throw new InternalServerErrorException(
-        'An error occurred while fetching repositories.',
+        `GitHub API error: ${response.statusText}, ${response.data}`,
       );
     }
+
+    const total_count = response.data.total_count;
+    const items = response.data.items.map((item) => ({
+      name: item.full_name,
+      stargazers_count: item.stargazers_count,
+      forks_count: item.forks_count,
+      updated_at: item.updated_at,
+    }));
+
+    return { items, total_count };
   }
 
   /**

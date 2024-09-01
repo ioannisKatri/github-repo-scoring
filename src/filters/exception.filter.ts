@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ErrorResponse } from '../commons/types';
 import { mapHttpStatusToText } from '../commons/mappers';
+import { AxiosError } from 'axios';
 
 /**
  * A global exception filter that catches all exceptions thrown in the application
@@ -33,8 +34,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     this.logger.error(
-      `Status: ${status}`,
-      exception instanceof Error ? exception.stack : `${exception}`,
+      exception instanceof Error ? exception.stack : exception,
+      exception instanceof AxiosError ? exception.response.data : '',
     );
 
     let errorResponse: ErrorResponse = {
